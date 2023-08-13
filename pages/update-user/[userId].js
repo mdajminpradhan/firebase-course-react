@@ -1,8 +1,8 @@
-import { useRouter } from "next/router";
+import { Router, useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { collection, addDoc } from "firebase/firestore";
-import { db, storage } from "../firebaseConfig";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { collection, addDoc, setDoc } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 const Dashboard = () => {
   // state names
@@ -11,76 +11,63 @@ const Dashboard = () => {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [picture, setPicture] = useState("");
-  const [downloadUrl, setDownloadUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   // router
   const route = useRouter();
+  console.log(route.query.userId);
+
+  useEffect(() => {
+    const getDocumentData = async () => {
+      const docRef = doc(db, "friends", route.query.userId);
+
+      try {
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          console.log("Document data:", docSnap.data());
+
+          const data = docSnap.data();
+
+          setFirstName(data.firstName || "");
+          setLastName(data.lastName || "");
+          setAddress(data.address || "");
+          setPhone(data.phone || "");
+          setEmail(data.email || "");
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.log("error is - ", error);
+      }
+    };
+
+    getDocumentData();
+  }, []);
 
   // handle create account
-  const handleAddFriend = async () => {
+  const handleUpdateFriend = async () => {
+    setIsLoading(true);
     //
 
-    const storageRef = ref(storage, picture.name);
+    try {
+      const docRef = await setDoc(doc(db, "friends", route.query.userId), {
+        firstName: firstName,
+        lastName: lastName,
+        address: address,
+        phone: phone,
+        email: email,
+      });
 
-    const uploadTask = uploadBytesResumable(storageRef, picture);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        // Observe state change events such as progress, pause, and resume
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log("Upload is " + progress + "% done");
-        switch (snapshot.state) {
-          case "paused":
-            console.log("Upload is paused");
-            break;
-          case "running":
-            console.log("Upload is running");
-            break;
-        }
-      },
-      (error) => {
-        // Handle unsuccessful uploads
-      },
-      () => {
-        // Handle successful uploads on complete
-        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          console.log("File available at", downloadURL);
-          setDownloadUrl(downloadURL);
-        });
-      }
-    );
+      route.push("/");
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+    }
 
     // route.push('/')
     console.log(firstName, lastName, address, phone, email);
   };
-
-  useEffect(() => {
-    if (downloadUrl !== "") {
-      const createRecord = async () => {
-        try {
-          const docRef = await addDoc(collection(db, "friends"), {
-            firstName: firstName,
-            lastName: lastName,
-            address: address,
-            phone: phone,
-            email: email,
-            link: downloadUrl,
-          });
-
-          console.log("doc ref - ", docRef.id);
-          route.push("/");
-        } catch (error) {
-          console.log(error);
-        }
-      };
-
-      createRecord();
-    }
-  }, [downloadUrl]);
 
   return (
     <div>
@@ -99,7 +86,7 @@ const Dashboard = () => {
 
       <form className="w-2/5 mx-auto flex justify-center items-center mt-16">
         <form>
-          <p className="text-3xl font-semibold">Add new friend</p>
+          <p className="text-3xl font-semibold">Update friend</p>
           <p className="">Let's explore the unexplored</p>
 
           <div className="grid gap-6 mb-6 md:grid-cols-2 mt-8">
@@ -180,27 +167,22 @@ const Dashboard = () => {
               onChange={(event) => setEmail(event.target.value)}
             />
           </div>
-          <div className="mb-6">
-            <label for="email" className="block mb-2 text-sm font-medium ">
-              Profile picture
-            </label>
-            <input
-              type="file"
-              id="email"
-              className="border border-gray-200 px-2 py-2 rounded-lg w-full placeholder-gray-300 focus:ring-1 focus:ring-gray-200 outline-none"
-              required
-              autoComplete="off"
-              onChange={(event) => setPicture(event.target.files[0])}
-            />
-          </div>
-
-          <button
-            type="button"
-            className="w-full bg-blue-500 py-2 text-white rounded-lg mt-2 hover:bg-blue-400"
-            onClick={handleAddFriend}
-          >
-            Submit
-          </button>
+          {isLoading === true ? (
+            <button
+              type="button"
+              className="w-full bg-blue-500 py-2 text-white rounded-lg mt-2 hover:bg-blue-400"
+            >
+              Updating...
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="w-full bg-blue-500 py-2 text-white rounded-lg mt-2 hover:bg-blue-400"
+              onClick={handleUpdateFriend}
+            >
+              Update
+            </button>
+          )}
           <button
             type="button"
             className="w-full py-2 rounded-lg mt-6 hover:bg-blue-50"

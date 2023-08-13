@@ -1,5 +1,8 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { auth, db } from "../firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 const Signup = () => {
   // state names
@@ -14,8 +17,23 @@ const Signup = () => {
   const route = useRouter();
 
   // handle create account
-  const handleCreateAccount = () => {
-    //
+  const handleCreateAccount = async () => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+
+      // Add a new document in collection "cities"
+      setDoc(doc(db, "users", 'new_user'), {
+        firstName: firstName,
+        lastName: lastName,
+        address: address,
+        phone: phone,
+        email: email,
+      });
+
+      route.push('/login')
+    } catch (error) {
+      console.log(error);
+    }
 
     console.log(firstName, lastName, address, phone, email, password);
   };

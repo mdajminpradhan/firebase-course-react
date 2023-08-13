@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { auth } from "../firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const SimpleSignup = () => {
   // state names
@@ -10,8 +12,16 @@ const SimpleSignup = () => {
   const route = useRouter();
 
   // handle login account
-  const handleCreateAccount = (event) => {
+  const handleCreateAccount = () => {
     //
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((user) => {
+        console.log(user);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
 
     console.log(email, password);
   };
@@ -56,7 +66,7 @@ const SimpleSignup = () => {
           className="w-full bg-blue-500 py-2 text-white rounded-lg mt-2 hover:bg-blue-400"
           onClick={handleCreateAccount}
         >
-          Login
+          Create account
         </button>
 
         <button

@@ -1,17 +1,35 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { auth } from "../firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const Login = () => {
   // state names
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   // router
   const route = useRouter();
 
   // handle login account
-  const handleLoginAccount = (event) => {
+  const handleLoginAccount = async () => {
     //
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+
+      route.push('/')
+    } catch (error) {
+      console.log(error);
+      if (error == "FirebaseError: Firebase: Error (auth/user-not-found).") {
+        setError("User not registerd...");
+      } else if (
+        error == "FirebaseError: Firebase: Error (auth/wrong-password)."
+      ) {
+        setError("Wrong password...");
+      }
+    }
 
     console.log(email, password);
   };
@@ -21,6 +39,10 @@ const Login = () => {
       <div className="w-96">
         <p className="text-3xl font-semibold">Login account</p>
         <p className="">Let's explore the unexplored</p>
+
+        {error !== "" ? (
+          <p className="bg-red-100 px-4 py-2 rounded-md">{error}</p>
+        ) : null}
 
         <div className="mb-6 mt-8">
           <label for="email" className="block mb-2 text-sm font-medium ">
@@ -54,7 +76,7 @@ const Login = () => {
         <button
           type="button"
           className="w-full bg-blue-500 py-2 text-white rounded-lg mt-2 hover:bg-blue-400"
-          onClick={() => route.push('/')}
+          onClick={handleLoginAccount}
         >
           Login
         </button>
