@@ -35,7 +35,7 @@ const Dashboard = () => {
       </div>
 
       <form className="w-2/5 mx-auto flex justify-center items-center mt-16">
-        <form>
+        <div>
           <p className="text-3xl font-semibold">Add new friend</p>
           <p className="">Let's explore the unexplored</p>
 
@@ -131,7 +131,7 @@ const Dashboard = () => {
           >
             Cancel
           </button>
-        </form>
+        </div>
       </form>
     </div>
   );

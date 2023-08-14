@@ -22,7 +22,7 @@ const Signup = () => {
 
   return (
     <form className="w-2/5 mx-auto h-screen flex justify-center items-center">
-      <form>
+      <div>
         <p className="text-3xl font-semibold">Create account</p>
         <p className="">Let's explore the unexplored</p>
 
@@ -125,7 +125,7 @@ const Signup = () => {
         >
           Already have an account?
         </button>
-      </form>
+      </div>
     </form>
   );
 };
